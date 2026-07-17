@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# secrets — NEVER commit
+.env
+.env.local
+
+# vector index cache (regenerated from vault)
+.mdv-cache/
+*.mdvindex
+
+# os
+Thumbs.db
+.DS_Store
+
+# logs
+*.log

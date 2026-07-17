@@ -1,0 +1,26 @@
+{
+  "name": "mdv-mcp",
+  "version": "1.0.0",
+  "description": "mdv-mcp — local, private MCP server for an Obsidian/markdown vault. NVIDIA nemotron-3-embed-1b semantic search, pure-JS int8 vector store, file watcher, read/write/delete/list/tags/backlinks tools. Local-only, never published to npm.",
+  "type": "module",
+  "private": true,
+  "main": "src/index.mjs",
+  "bin": {
+    "mdv-mcp": "src/index.mjs"
+  },
+  "scripts": {
+    "start": "node src/index.mjs",
+    "dev": "node --watch src/index.mjs",
+    "selftest": "node src/selftest.mjs",
+    "reindex": "node src/reindex.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "chokidar": "^3.6.0",
+    "gray-matter": "^4.0.3",
+    "zod": "^3.23.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

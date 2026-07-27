@@ -1,43 +1,85 @@
 # mdv-mcp
 
-**Local, private MCP server for a markdown/Obsidian vault.** Hybrid semantic +
-keyword search over all your `.md` notes, plus read/write/delete/list/tags/
-backlinks tools. No cloud, no npm publish, no telemetry. Runs on your machine only.
+**Local MCP server for Obsidian/markdown vaults.** Hybrid semantic + keyword
+search, OKF frontmatter, wikilinks, persistent memory, live file watcher.
 
-- **Embeddings:** NVIDIA `nemotron-3-embed-1b` via NVIDIA NIM
-  (`https://integrate.api.nvidia.com/v1`, OpenAI-compatible). Multilingual,
-  2048-dim, `input_type` passage/query handled automatically.
-- **Vector store:** pure-JS, on-disk, int8-quantized (about 4x smaller than float).
-  Incremental — only changed files are re-embedded (keyed by mtime).
-- **Hybrid search:** semantic ranking fused with TF-IDF keyword fallback
-  (so it still works if the API key is missing).
-- **Live index:** `chokidar` watcher re-indexes edited files in place.
-
-> Your vault (with the OKF `knowledge/` tree) is **never uploaded**. Only short
-> text chunks are sent to NVIDIA for embedding; the returned vectors are stored
-> locally in `<VAULT_ROOT>/.mdv-cache/vectors.json` (gitignored).
-
-## Setup
+## Install
 
 ```bash
-npm install
-cp .env.example .env        # then set NVIDIA_API_KEY=nvapi-...
+npm install -g @chirag127/mdv-mcp
+```
+
+Or run directly with `npx`:
+
+```bash
+npx -y @chirag127/mdv-mcp
+```
+
+## Features
+
+- **Embeddings:** NVIDIA `nemotron-3-embed-1b` via NVIDIA NIM (OpenAI-compatible).
+  Multilingual, 2048-dim, `input_type` passage/query handled automatically.
+- **Vector store:** pure-JS, on-disk, int8-quantized (~4x smaller than float).
+  Incremental — only changed files are re-embedded (keyed by mtime).
+- **Hybrid search:** semantic ranking fused with TF-IDF keyword fallback
+  (works without API key).
+- **Live index:** `chokidar` watcher re-indexes edited files in place.
+- **OKF frontmatter:** detect, validate, and enrich Open Knowledge Format metadata.
+- **Wikilinks:** extract and resolve `[[wikilinks]]` to vault-relative paths.
+- **Persistent memory:** remember decisions, insights, bugs, todos across sessions.
+
+> Your vault is **never uploaded**. Only short text chunks are sent to NVIDIA for
+> embedding; vectors are stored locally in `<VAULT_ROOT>/.mdv-cache/vectors.json`.
+
+## Quick Start
+
+```bash
+cp .env.example .env        # set NVIDIA_API_KEY=nvapi-...
 node src/selftest.mjs       # verify key + embedding round-trip
 node src/reindex.mjs        # one-shot full index (incremental afterwards)
 node src/index.mjs          # start the MCP server (stdio)
 ```
 
-## Configure (OpenCode / Claude Code)
+## Configure
+
+### OpenCode
 
 ```json
 "mdv-mcp": {
   "type": "local",
-  "command": ["node", "C:/g/mdv-mcp/src/index.mjs"],
-  "env": { "VAULT_ROOT": "C:/g/md", "NVIDIA_API_KEY": "nvapi-..." }
+  "command": ["npx", "-y", "@chirag127/mdv-mcp"],
+  "env": { "VAULT_ROOT": "/path/to/vault", "NVIDIA_API_KEY": "nvapi-..." }
 }
 ```
 
-`VAULT_ROOT` and `NVIDIA_API_KEY` may also live in `.env`.
+### Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "mdv-mcp": {
+      "command": "npx",
+      "args": ["-y", "@chirag127/mdv-mcp"],
+      "env": {
+        "VAULT_ROOT": "/path/to/vault",
+        "NVIDIA_API_KEY": "nvapi-..."
+      }
+    }
+  }
+}
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `VAULT_ROOT` | (required) | Path to markdown/Obsidian vault root |
+| `NVIDIA_API_KEY` | (optional) | NVIDIA NIM API key for embeddings |
+| `NVIDIA_EMBED_MODEL` | `nvidia/nemotron-3-embed-1b` | Embedding model |
+| `NVIDIA_BASE_URL` | `https://integrate.api.nvidia.com/v1` | NVIDIA endpoint |
+| `MDV_CACHE_DIR` | `<VAULT_ROOT>/.mdv-cache` | Vector index storage |
+| `HTTP_TRANSPORT` | (unset) | Set `1` to enable SSE transport |
+| `HTTP_PORT` | (unset) | Port for SSE transport |
 
 ## Tools
 
@@ -53,10 +95,14 @@ node src/index.mjs          # start the MCP server (stdio)
 | `vault_frontmatter` | Parsed YAML frontmatter only |
 | `vault_stats` | Index status (counts, dims, embedding on/off) |
 | `vault_reindex` | Force incremental re-embed sync |
+| `vault_remember` | Save a memory (decision, insight, bug, todo) |
+| `vault_recall` | Retrieve past memories |
+| `vault_memory_stats` | Memory store statistics |
+| `vault_memory_archive` | Archive a memory by ID |
+| `vault_format` | Detect OKF format + suggest frontmatter improvements |
+| `vault_wikilinks` | Extract and resolve [[wikilinks]] |
+| `vault_install_opencode` | Install config into a project directory |
 
-## Notes
+## License
 
-- `package.json` is `"private": true`. Nothing is published to npm. Keep it that way.
-- The knowledge format follows **OKF (Open Knowledge Format)** already used in the
-  vault. Frontmatter stays minimal: `type` required, `title`/`description`/`tags`
-  recommended — small, and it improves retrieval.
+MIT

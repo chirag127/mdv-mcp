@@ -1,18 +1,23 @@
+// opencode.mjs — install mdv-mcp config into a project for OpenCode/Claude Code discovery.
 import fs from "node:fs/promises";
 import fssync from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.mjs";
+import { SERVER_VERSION } from "./server.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "..").replace(/\\/g, "/");
 const INDEX_ENTRY = `${PROJECT_ROOT}/src/index.mjs`;
 
-function slash(p) {
-  return p.replace(/\\/g, "/");
-}
+function slash(p) { return p.replace(/\\/g, "/"); }
 
+/**
+ * Generate an opencode.json / MCP config object for a project.
+ * @param {string} projectDir
+ * @param {{ transport?: "stdio"|"http", httpPort?: number, vaultRoot?: string }} options
+ */
 export function generateOpenCodeConfig(projectDir, options = {}) {
   const {
     transport = "stdio",
@@ -23,9 +28,7 @@ export function generateOpenCodeConfig(projectDir, options = {}) {
   if (transport === "http") {
     return {
       mcpServers: {
-        "mdv-mcp": {
-          url: `http://localhost:${httpPort}/mcp`,
-        },
+        "mdv-mcp": { url: `http://localhost:${httpPort}/mcp` },
       },
     };
   }
@@ -34,9 +37,8 @@ export function generateOpenCodeConfig(projectDir, options = {}) {
     mcpServers: {
       "mdv-mcp": {
         command: "node",
-        args: [INDEX_ENTRY],
+        args: [INDEX_ENTRY, "--vault", vaultRoot],
         env: {
-          VAULT_ROOT: vaultRoot,
           NVIDIA_API_KEY: "${NVIDIA_API_KEY}",
         },
       },
@@ -44,6 +46,11 @@ export function generateOpenCodeConfig(projectDir, options = {}) {
   };
 }
 
+/**
+ * Generate an AGENTS.md snippet for a project.
+ * @param {string} projectDir
+ * @param {object} options
+ */
 export function generateAgentsMd(projectDir, options = {}) {
   const dir = slash(projectDir || ".");
   return `# mdv-mcp — Vault Memory
@@ -66,10 +73,10 @@ Semantic search via NVIDIA nemotron-3-embed-1b + TF-IDF hybrid.
 | vault_stats | Report index status: file/chunk counts, dims, embedding status |
 | vault_reindex | Force a full incremental re-embed sync of the vault |
 | vault_remember | Save session conclusions, decisions, insights to persistent memory |
-| vault_recall | Retrieve past session memories \u2014 load context at session start |
+| vault_recall | Retrieve past session memories — load context at session start |
 | vault_memory_stats | Report memory store statistics |
 | vault_memory_archive | Archive a memory by ID |
-| vault_format | Detect file format and suggest OKF frontmatter improvements |
+| vault_format | Detect file format, validate OKF v0.2 compliance, apply enrichment |
 | vault_wikilinks | Extract and resolve [[wikilinks]] from a vault file |
 | vault_install_opencode | Install mdv-mcp config into a project for OpenCode |
 
@@ -79,7 +86,7 @@ Semantic search via NVIDIA nemotron-3-embed-1b + TF-IDF hybrid.
 2. During work, use \`vault_search\` to find relevant knowledge and \`vault_read\` to fetch full notes
 3. When you learn something important, call \`vault_remember\` to persist the insight
 4. At session end, call \`vault_remember\` with type "session" to save conclusions
-5. Use \`vault_format\` to check if notes follow OKF conventions
+5. Use \`vault_format\` (with apply=true) to enrich OKF frontmatter in-place
 6. Use \`vault_tags\` to discover the knowledge taxonomy
 7. Use \`vault_backlinks\` to find related notes linking to a topic
 
@@ -91,6 +98,7 @@ Semantic search via NVIDIA nemotron-3-embed-1b + TF-IDF hybrid.
 `;
 }
 
+/** Generate a skill file for ~/.opencode/skills/mdv-mcp/SKILL.md */
 export function generateSkillFile() {
   return `---
 name: mdv-mcp
@@ -120,7 +128,7 @@ Use whenever you need to:
 - \`vault_list\`: Browse vault structure
 - \`vault_tags\`: Discover knowledge taxonomy
 - \`vault_backlinks\`: Find notes linking to a given file
-- \`vault_format\`: Check OKF format compliance and get suggestions
+- \`vault_format\`: Check OKF v0.2 format compliance; apply=true enriches in-place
 - \`vault_wikilinks\`: Extract and resolve wikilinks
 
 ## Workflow
@@ -129,42 +137,34 @@ Use whenever you need to:
 2. Read specific notes to get detailed knowledge
 3. After completing a task, write a summary note to the vault
 4. Use tags and backlinks for discovery and navigation
-
-## Conventions
-
-- Paths are vault-relative: \`okf/runbooks/deploy.md\`
-- Notes use YAML frontmatter + markdown body
-- Tags appear as \`#tag\` in body or \`tags:\` in frontmatter
-- Wikilinks \`[[note]]\` and markdown links \`[](path)\` are both supported
 `;
 }
 
+/**
+ * Install mdv-mcp config into a target directory.
+ * @param {string} targetDir
+ * @param {{ transport?: "stdio"|"http" }} options
+ */
 export async function install(targetDir, options = {}) {
   const dir = slash(path.resolve(targetDir));
   const summary = [];
 
+  // opencode.json
   const configObj = generateOpenCodeConfig(dir, options);
   const configPath = path.join(dir, "opencode.json");
-
   if (fssync.existsSync(configPath)) {
     const existing = JSON.parse(await fs.readFile(configPath, "utf8"));
-    existing.mcpServers = {
-      ...(existing.mcpServers ?? {}),
-      ...configObj.mcpServers,
-    };
+    existing.mcpServers = { ...(existing.mcpServers ?? {}), ...configObj.mcpServers };
     await fs.writeFile(configPath, JSON.stringify(existing, null, 2) + "\n");
     summary.push(`merged mdv-mcp into ${slash(configPath)}`);
   } else {
-    await fs.writeFile(
-      configPath,
-      JSON.stringify(configObj, null, 2) + "\n",
-    );
+    await fs.writeFile(configPath, JSON.stringify(configObj, null, 2) + "\n");
     summary.push(`created ${slash(configPath)}`);
   }
 
+  // AGENTS.md
   const agentsMd = generateAgentsMd(dir, options);
   const agentsPath = path.join(dir, "AGENTS.md");
-
   if (fssync.existsSync(agentsPath)) {
     const existing = await fs.readFile(agentsPath, "utf8");
     if (!existing.includes("mdv-mcp")) {
@@ -178,10 +178,10 @@ export async function install(targetDir, options = {}) {
     summary.push(`created ${slash(agentsPath)}`);
   }
 
+  // Skill file
   const homeDir = slash(os.homedir());
   const skillDir = path.join(homeDir, ".opencode", "skills", "mdv-mcp");
   await fs.mkdir(skillDir, { recursive: true });
-
   const skillPath = path.join(skillDir, "SKILL.md");
   await fs.writeFile(skillPath, generateSkillFile());
   summary.push(`created ${slash(skillPath)}`);

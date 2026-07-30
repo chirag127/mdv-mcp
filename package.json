@@ -1,7 +1,7 @@
 {
   "name": "@chirag127/mdv-mcp",
-  "version": "2.0.0",
-  "description": "Local MCP server for Obsidian/markdown vaults. NVIDIA nemotron-3-embed-1b semantic search, pure-JS int8 vector store, OKF frontmatter, wikilinks, memory, live file watcher.",
+  "version": "3.0.0",
+  "description": "Local MCP server for Obsidian/markdown vaults. NVIDIA nemotron-3-embed-1b semantic search, pure-JS int8 vector store, OKF v0.2 frontmatter, wikilinks, memory, live file watcher. Folder-scoped via --vault arg or MCP roots.",
   "type": "module",
   "main": "src/index.mjs",
   "bin": {
@@ -15,6 +15,7 @@
   },
   "files": [
     "src/",
+    "docs/",
     "README.md",
     "LICENSE"
   ],
@@ -30,6 +31,7 @@
     "nemotron",
     "okf",
     "knowledge-management",
+    "vector-search",
     "ai"
   ],
   "author": "Chirag Singhal",
@@ -41,7 +43,7 @@
   "bugs": {
     "url": "https://github.com/chirag127/mdv-mcp/issues"
   },
-  "homepage": "https://github.com/chirag127/mdv-mcp#readme",
+  "homepage": "https://mdv-mcp.oriz.in",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "chokidar": "^3.6.0",

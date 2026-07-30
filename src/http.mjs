@@ -50,7 +50,7 @@ export async function startHttpTransport(server, port) {
     }
 
     if (path === "/health" && req.method === "GET") {
-      json(res, 200, { status: "ok", server: "mdv-mcp", version: "2.0.0" });
+      json(res, 200, { status: "ok", server: "mdv-mcp", version: "3.0.0" });
       return;
     }
 

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mdv-mcp — Markdown Vault MCP Server</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --code-bg: #1c2128;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Nav */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      height: 56px;
+    }
+    .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--text); }
+    .nav-links { display: flex; gap: 1.5rem; margin-left: auto; }
+    .nav-links a { color: var(--muted); font-size: 0.9rem; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      max-width: 860px;
+      margin: 5rem auto 3rem;
+      padding: 0 2rem;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.2rem;
+      background: linear-gradient(135deg, #e6edf3 0%, #58a6ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 22px;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    /* Install block */
+    .install {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      position: relative;
+    }
+    .code-block .comment { color: var(--muted); }
+    .code-block .key { color: #ff7b72; }
+    .code-block .val { color: var(--accent2); }
+    .code-block .str { color: #a5d6ff; }
+
+    /* Features */
+    .features {
+      max-width: 1000px;
+      margin: 5rem auto;
+      padding: 0 2rem;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .section-sub {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 3rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.2rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+    }
+    .card-icon { font-size: 1.5rem; margin-bottom: 0.7rem; }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .card p { font-size: 0.9rem; color: var(--muted); }
+
+    /* Tools table */
+    .tools {
+      max-width: 860px;
+      margin: 5rem auto;
+      padding: 0 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    thead th {
+      text-align: left;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 600;
+    }
+    tbody td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.85em;
+    }
+
+    /* Precedence */
+    .config {
+      max-width: 860px;
+      margin: 5rem auto;
+      padding: 0 2rem;
+    }
+    .precedence-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .precedence-table th, .precedence-table td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .precedence-table th { color: var(--muted); text-align: left; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 5rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-brand">mdv-mcp</span>
+  <div class="nav-links">
+    <a href="./configuration.md">Docs</a>
+    <a href="./tools.md">Tools</a>
+    <a href="./architecture.md">Architecture</a>
+    <a href="https://github.com/chirag127/mdv-mcp">GitHub</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">v3.0.0 — Node.js MCP Server</div>
+  <h1>Your markdown vault, AI-native</h1>
+  <p class="hero-sub">
+    Local MCP server for Obsidian and plain-markdown vaults.
+    NVIDIA nemotron-3-embed-1b semantic search, pure-JS int8 vector store,
+    OKF frontmatter, wikilinks, persistent memory, live file watcher.
+  </p>
+  <div class="hero-actions">
+    <a href="https://github.com/chirag127/mdv-mcp" class="btn btn-primary">View on GitHub</a>
+    <a href="./configuration.md" class="btn btn-secondary">Read docs</a>
+  </div>
+</section>
+
+<section class="install">
+  <p style="margin-bottom:0.8rem; color:var(--muted); font-size:0.9rem;">Claude Code config — add to <code>~/.claude.json</code></p>
+  <div class="code-block">
+<pre><span class="key">"mdv-mcp"</span>: {
+  <span class="key">"command"</span>: <span class="str">"npx"</span>,
+  <span class="key">"args"</span>: [<span class="str">"-y"</span>, <span class="str">"@chirag127/mdv-mcp"</span>, <span class="str">"--vault"</span>, <span class="str">"C:/path/to/notes"</span>],
+  <span class="key">"env"</span>: { <span class="key">"NVIDIA_API_KEY"</span>: <span class="str">"nvapi-..."</span> }
+}
+<span class="comment">// No key? TF-IDF fallback — works without any API.</span></pre>
+  </div>
+</section>
+
+<section class="features">
+  <h2 class="section-title">What it does</h2>
+  <p class="section-sub">One MCP server, 16 tools, zero cloud dependencies.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">&#x26a1;</div>
+      <h3>Hybrid semantic search</h3>
+      <p>NVIDIA nemotron-3-embed-1b (2048-dim) embeddings merged with TF-IDF via reciprocal-rank fusion. Falls back to TF-IDF if no key.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1f4be;</div>
+      <h3>Pure-JS int8 vector store</h3>
+      <p>On-disk JSON index with int8 quantization — no Python, no FAISS, no server. Just Node.js and a file.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1f4c2;</div>
+      <h3>Folder-scoped</h3>
+      <p>Set vault via <code>--vault</code> CLI arg, MCP roots capability, <code>VAULT_ROOT</code> env, or cwd. Clear precedence, validated at startup.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1f9e0;</div>
+      <h3>Persistent memory</h3>
+      <p>Save decisions, insights, and session conclusions. Retrieve them across sessions. Stored locally in <code>.mdv-cache/memories.json</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1f4cb;</div>
+      <h3>OKF v0.2 frontmatter</h3>
+      <p>Detect, validate, and enrich Open Knowledge Format frontmatter. Infers type, title, description, tags from content. Apply with <code>apply: true</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1f440;</div>
+      <h3>Live file watcher</h3>
+      <p>Chokidar watches the vault for adds/changes/deletes. Index stays current without manual reindex.</p>
+    </div>
+  </div>
+</section>
+
+<section class="tools">
+  <h2 class="section-title">MCP tools</h2>
+  <p class="section-sub">16 tools registered on the server.</p>
+  <table>
+    <thead>
+      <tr><th>Tool</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>vault_search</code></td><td>Hybrid semantic + keyword search, ranked results with snippets</td></tr>
+      <tr><td><code>vault_read</code></td><td>Read a file — frontmatter, body, format detection, wikilinks</td></tr>
+      <tr><td><code>vault_write</code></td><td>Create or overwrite a file; auto re-indexes</td></tr>
+      <tr><td><code>vault_delete</code></td><td>Delete a file and its index entry</td></tr>
+      <tr><td><code>vault_list</code></td><td>List markdown files, optional subdir filter</td></tr>
+      <tr><td><code>vault_tags</code></td><td>Aggregate all tags by frequency</td></tr>
+      <tr><td><code>vault_backlinks</code></td><td>Find files linking to a given file</td></tr>
+      <tr><td><code>vault_frontmatter</code></td><td>Read parsed YAML frontmatter only</td></tr>
+      <tr><td><code>vault_stats</code></td><td>Index status, vault root, embedding mode</td></tr>
+      <tr><td><code>vault_reindex</code></td><td>Force incremental re-embed sync</td></tr>
+      <tr><td><code>vault_remember</code></td><td>Save persistent memory (decision/insight/todo/bug)</td></tr>
+      <tr><td><code>vault_recall</code></td><td>Retrieve past memories by query/project/type</td></tr>
+      <tr><td><code>vault_memory_stats</code></td><td>Memory store statistics</td></tr>
+      <tr><td><code>vault_memory_archive</code></td><td>Archive a memory by ID</td></tr>
+      <tr><td><code>vault_format</code></td><td>OKF validation + enrichment (apply=true writes back)</td></tr>
+      <tr><td><code>vault_wikilinks</code></td><td>Extract + resolve [[wikilinks]]</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="config">
+  <h2 class="section-title">Vault targeting</h2>
+  <p class="section-sub">Precedence from highest to lowest.</p>
+  <table class="precedence-table">
+    <thead><tr><th>Priority</th><th>Source</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>--vault &lt;path&gt;</code> CLI arg</td><td><code>npx @chirag127/mdv-mcp --vault /my/notes</code></td></tr>
+      <tr><td>2</td><td>MCP roots capability</td><td>Client sends <code>roots</code> at initialize</td></tr>
+      <tr><td>3</td><td><code>VAULT_ROOT</code> env var</td><td><code>VAULT_ROOT=/my/notes</code> in <code>.env</code></td></tr>
+      <tr><td>4</td><td>cwd</td><td>Working directory when server starts</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  <p>mdv-mcp &mdash; MIT License &mdash; <a href="https://github.com/chirag127/mdv-mcp">github.com/chirag127/mdv-mcp</a></p>
+</footer>
+
+</body>
+</html>

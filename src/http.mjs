@@ -1,4 +1,4 @@
-import { createServer } from "node:http";
+import { createServer as createHttpServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
@@ -33,13 +33,20 @@ function readBody(req) {
   });
 }
 
-export async function startHttpTransport(server, port) {
+/**
+ * Start the Streamable HTTP (MCP 2.0) transport.
+ * @param {() => import("@modelcontextprotocol/sdk/server/mcp.js").McpServer} createMcpServer
+ *   Factory returning a fresh, fully-wired server per session. A new instance is
+ *   required per connection — the SDK forbids reusing one server across transports.
+ * @param {number} [port]
+ */
+export async function startHttpTransport(createMcpServer, port) {
   const host = process.env.HTTP_HOST || "localhost";
   port = port ?? (Number(process.env.HTTP_PORT) || 3777);
 
   const transports = new Map();
 
-  const httpServer = createServer(async (req, res) => {
+  const httpServer = createHttpServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const path = url.pathname;
 
@@ -83,7 +90,7 @@ export async function startHttpTransport(server, port) {
               log("session closed:", id);
             }
           };
-          await server.connect(transport);
+          await createMcpServer().connect(transport);
         } else {
           json(res, 400, {
             jsonrpc: "2.0",

@@ -46,7 +46,50 @@ Precedence (highest → lowest):
 | 3 | `VAULT_ROOT` env var |
 | 4 | `cwd` |
 
-## Features
+## Transports
+
+mdv-mcp speaks two MCP transports. **stdio is the default** and needs no flags —
+it is what the Claude Code / Cursor configs above use.
+
+### stdio (default)
+
+```bash
+npx -y @chirag127/mdv-mcp --vault /path/to/notes
+```
+
+### Streamable HTTP (MCP 2.0)
+
+A first-class, spec-correct Streamable HTTP transport (session management via the
+`mcp-session-id` header; `POST`/`GET`/`DELETE` on `/mcp`; CORS enabled). Enable it
+with the `--http` flag, the `HTTP_TRANSPORT=1` env var, or by setting `HTTP_PORT`:
+
+```bash
+# any of these enables HTTP (default host localhost, port 3777)
+npm run start:http -- --vault /path/to/notes
+node src/index.mjs --http --vault /path/to/notes
+HTTP_TRANSPORT=1 node src/index.mjs --vault /path/to/notes
+HTTP_PORT=3777 node src/index.mjs --vault /path/to/notes
+```
+
+Endpoints:
+
+| Route | Method(s) | Purpose |
+|---|---|---|
+| `/mcp` | POST / GET / DELETE | MCP Streamable HTTP endpoint (session-managed) |
+| `/health` | GET | Liveness probe → `{ "status": "ok", ... }` |
+
+Register it in an HTTP-capable MCP client with:
+
+```json
+{ "type": "http", "url": "http://localhost:3777/mcp" }
+```
+
+> **Local by design.** HTTP runs on `localhost` and serves the *local* vault
+> (the machine's own file index + memory store) — it is not a public/remote
+> service unless you deliberately host it behind a reverse proxy and secure it.
+> Point `HTTP_HOST` elsewhere only if you understand the exposure.
+
+
 
 - **Hybrid search** — NVIDIA nemotron-3-embed-1b (2048-dim) + TF-IDF via reciprocal-rank fusion
 - **Local vector store** — pure-JS int8-quantized, on-disk, incremental (mtime-keyed)
@@ -54,7 +97,7 @@ Precedence (highest → lowest):
 - **OKF v0.2 frontmatter** — detect, validate, enrich (apply with `vault_format apply=true`)
 - **Wikilinks** — extract + resolve `[[wikilinks]]` to vault-relative paths
 - **Persistent memory** — remember decisions/insights/todos across sessions
-- **HTTP transport** — optional SSE transport for browser/remote clients
+- **Dual transport** — stdio by default; first-class Streamable HTTP (MCP 2.0) via `--http`
 
 Your vault is never uploaded. Only short text chunks are sent to NVIDIA for embedding; vectors are stored locally in `<VAULT_ROOT>/.mdv-cache/vectors.json`.
 

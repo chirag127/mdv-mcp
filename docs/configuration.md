@@ -102,10 +102,25 @@ mdv-mcp will use the first root as the vault — no explicit config needed.
 
 ## HTTP transport
 
-Enable for browser/remote clients:
+A first-class Streamable HTTP (MCP 2.0) transport. stdio stays the default;
+enable HTTP with the `--http` flag, `HTTP_TRANSPORT=1`, or by setting `HTTP_PORT`:
 
 ```bash
+node src/index.mjs --http --vault /my/notes
+# or
 HTTP_PORT=3777 node src/index.mjs --vault /my/notes
+# or
+npm run start:http -- --vault /my/notes
 ```
 
 Endpoint: `http://localhost:3777/mcp`. Health check: `http://localhost:3777/health`.
+
+Register in an HTTP-capable MCP client:
+
+```json
+{ "type": "http", "url": "http://localhost:3777/mcp" }
+```
+
+HTTP binds to `localhost` and serves the local vault — it is not a remote service
+unless you deliberately host and secure it (`HTTP_HOST` changes the bind address).
+

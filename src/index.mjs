@@ -40,22 +40,29 @@ function startWatcher(indexer) {
   return watcher;
 }
 
-async function main() {
-  // Create server + transport first so that MCP initialize handshake fires,
-  // which lets us call listRoots() to honour the roots precedence rule.
+// Build a fully-wired McpServer bound to the shared indexer + memory.
+// A fresh instance is needed per transport connection (the SDK forbids
+// reusing one server across multiple transports), so stdio and each HTTP
+// session get their own server — all backed by the same local vault state.
+function buildServer(indexer, memory) {
   const server = createServer();
-  const transport = new StdioServerTransport();
-
-  // Register all tool groups (indexer/memory not ready yet — that's fine,
-  // registrations are closures; init fires before any tool call).
-  const indexer = new Indexer();
-  const memory  = new Memory();
-
   registerSearchTools(server, indexer);
   registerReadTools(server, indexer);
   registerWriteTools(server, indexer);
   registerMemoryTools(server, memory);
   registerAdminTools(server, indexer);
+  return server;
+}
+
+async function main() {
+  // indexer/memory are shared singletons — one local vault, one index.
+  const indexer = new Indexer();
+  const memory  = new Memory();
+
+  // Create server + transport first so that MCP initialize handshake fires,
+  // which lets us call listRoots() to honour the roots precedence rule.
+  const server = buildServer(indexer, memory);
+  const transport = new StdioServerTransport();
 
   // Connect so the MCP handshake happens.
   await server.connect(transport);
@@ -104,9 +111,10 @@ async function main() {
 
   startWatcher(indexer);
 
-  if (process.env.HTTP_TRANSPORT === "1" || process.env.HTTP_PORT) {
+  if (process.env.HTTP_TRANSPORT === "1" || process.env.HTTP_PORT || process.argv.includes("--http")) {
     try {
-      await startHttpTransport(server);
+      // Each HTTP session gets its own server wired to the shared vault state.
+      await startHttpTransport(() => buildServer(indexer, memory));
     } catch (e) {
       log("HTTP transport failed:", e.message);
     }

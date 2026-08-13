@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node src/index.mjs",
+    "start:http": "node src/index.mjs --http",
     "dev": "node --watch src/index.mjs",
     "selftest": "node src/selftest.mjs",
     "reindex": "node src/reindex.mjs"
@@ -45,7 +46,7 @@
   },
   "homepage": "https://mdv-mcp.oriz.in",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "chokidar": "^3.6.0",
     "gray-matter": "^4.0.3",
     "zod": "^3.23.0"

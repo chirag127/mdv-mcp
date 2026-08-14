@@ -12,7 +12,10 @@
     "start:http": "node src/index.mjs --http",
     "dev": "node --watch src/index.mjs",
     "selftest": "node src/selftest.mjs",
-    "reindex": "node src/reindex.mjs"
+    "reindex": "node src/reindex.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "files": [
     "src/",
@@ -53,5 +56,9 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.7",
+    "vitest": "^3.2.7"
   }
 }

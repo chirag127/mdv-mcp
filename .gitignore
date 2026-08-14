@@ -9,6 +9,9 @@ node_modules/
 .mdv-cache/
 *.mdvindex
 
+# test coverage
+coverage/
+
 # os
 Thumbs.db
 .DS_Store

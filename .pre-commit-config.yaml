@@ -1,0 +1,12 @@
+# Lightweight, offline checks for the MCP server, npm manifests, and vault docs.
+# Application behavior remains covered by the existing npm test workflow.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b # v5.0.0
+    hooks:
+      - id: check-json
+      - id: check-merge-conflict
+        args: [--assume-in-merge]
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=no]
